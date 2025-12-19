@@ -17,7 +17,7 @@ export default function HeroSection() {
           Paróquia Santo Antônio - Bacaxá
         </h1>
         <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-          Uma comunidade de fé acolhedora, celebrando a palavra de Deus e servindo ao próximo com amor e dedicação.
+          Santo Antonio, apóstolo do amor, fazei que me inflameis do ardor divino que vos animava.
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
