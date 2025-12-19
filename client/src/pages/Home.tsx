@@ -26,7 +26,10 @@ const useLatestNews = (limit = 3) => {
       .then((r) => r.json())
       .then((data: ApiNews[]) => {
         if (!mounted) return;
-        setNews(data.slice(0, limit));
+        // API já retorna ordenado (mais recentes primeiro)
+        // Pega apenas os primeiros 'limit' itens
+        const sorted = Array.isArray(data) ? data.slice(0, limit) : [];
+        setNews(sorted);
       })
       .catch(() => setNews([]));
     return () => {
