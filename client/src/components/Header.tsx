@@ -25,7 +25,7 @@ export default function Header() {
               <ChurchIcon className="h-6 w-6 text-primary-foreground" />
             </div>
             <span className="font-serif text-lg font-bold text-primary-foreground hidden sm:block">
-              Paróquia Santo Antonio
+              Paróquia Santo Antônio - Bacaxá
             </span>
           </Link>
 

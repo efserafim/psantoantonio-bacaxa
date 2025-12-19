@@ -43,7 +43,7 @@ export default function AdminSidebar() {
             <ChurchIcon className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
           <div>
-            <h2 className="font-serif font-semibold text-sm">Paróquia Santo Antonio</h2>
+            <h2 className="font-serif font-semibold text-sm">Paróquia Santo Antônio - Bacaxá</h2>
             <p className="text-xs text-sidebar-foreground/60">Painel Administrativo</p>
           </div>
         </div>

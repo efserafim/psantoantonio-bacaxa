@@ -63,7 +63,7 @@ export default function AdminLogin() {
           </div>
           <CardTitle className="font-serif text-2xl">Área Administrativa</CardTitle>
           <CardDescription>
-            Paróquia Santo Antonio
+            Paróquia Santo Antônio - Bacaxá
           </CardDescription>
         </CardHeader>
         <CardContent>

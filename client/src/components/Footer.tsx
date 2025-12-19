@@ -11,7 +11,7 @@ export default function Footer() {
               <div className="bg-white/10 p-2 rounded-md">
                 <ChurchIcon className="h-6 w-6" />
               </div>
-              <span className="font-serif text-lg font-bold">Paróquia Santo Antonio</span>
+              <span className="font-serif text-lg font-bold">Paróquia Santo Antônio - Bacaxá</span>
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
               Uma comunidade de fé, esperança e caridade, servindo a Deus e ao próximo.
@@ -77,7 +77,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-primary-foreground/50">
-          <p>&copy; {new Date().getFullYear()} Paróquia Santo Antonio. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Paróquia Santo Antônio - Bacaxá. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

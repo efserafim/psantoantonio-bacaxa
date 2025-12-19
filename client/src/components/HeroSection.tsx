@@ -14,7 +14,7 @@ export default function HeroSection() {
       
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-          Paróquia Santo Antonio
+          Paróquia Santo Antônio - Bacaxá
         </h1>
         <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
           Uma comunidade de fé acolhedora, celebrando a palavra de Deus e servindo ao próximo com amor e dedicação.
