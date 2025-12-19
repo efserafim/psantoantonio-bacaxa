@@ -3,7 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import NewsCard from "@/components/NewsCard";
 import { useEffect, useState } from "react";
 import PastoralCard from "@/components/PastoralCard";
-import MassScheduleDynamic from "@/components/MassScheduleDynamic";
+import MassScheduleModern from "@/components/MassScheduleModern";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ArrowRight, ChurchIcon } from "lucide-react";
@@ -123,13 +123,13 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="max-w-2xl">
-            <MassScheduleDynamic />
+          <div className="max-w-4xl">
+            <MassScheduleModern />
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-muted/30">
+      <section className="py-16 bg-gradient-to-b from-muted/30 to-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div>
@@ -161,17 +161,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-primary text-primary-foreground">
+      <section className="py-20 bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <ChurchIcon className="h-12 w-12 mx-auto mb-6 opacity-80" />
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-4">
+          <ChurchIcon className="h-16 w-16 mx-auto mb-6 opacity-90 animate-pulse" />
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold mb-4">
             Venha nos Visitar
           </h2>
-          <p className="text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+          <p className="text-primary-foreground/90 mb-8 max-w-2xl mx-auto text-lg leading-relaxed">
             Santo Antonio, apóstolo do amor, fazei que me inflameis do ardor divino que vos animava.
           </p>
           <Link href="/missas">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90" data-testid="button-cta-missas">
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg" data-testid="button-cta-missas">
               Ver Horários das Missas
             </Button>
           </Link>
