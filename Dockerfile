@@ -6,19 +6,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar ALL dependencies
-RUN npm ci
+RUN npm ci --verbose
 
 # Copiar código
 COPY . .
 
 # Build
 RUN npm run build
-
-# Remover source files
-RUN rm -rf client server script shared src .local .env vite.config.ts tsconfig.json
-
-# Install apenas production deps
-RUN npm prune --omit=dev
 
 # Iniciar
 EXPOSE 5000

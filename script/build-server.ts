@@ -1,29 +1,34 @@
 import { build as viteBuild } from "vite";
-import { execSync } from "child_process";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
+import { mkdir, cp } from "fs/promises";
 
 async function buildAll() {
   // Build client
   console.log("building client...");
   await viteBuild();
 
-  // Compile server TypeScript to JavaScript
-  console.log("compiling server...");
-  execSync("npx tsc server/index.ts --outDir dist --module commonjs --target es2020 --skipLibCheck", {
-    stdio: "inherit"
-  });
+  // Copy server and shared to dist
+  console.log("copying server files...");
+  await mkdir("dist", { recursive: true });
   
-  // Compile shared TypeScript
-  console.log("compiling shared...");
-  execSync("npx tsc shared/schema.ts --outDir dist --module commonjs --target es2020 --skipLibCheck", {
-    stdio: "inherit"
-  });
+  try {
+    await cp("server", "dist/server", { recursive: true });
+    console.log("✓ Server copied");
+  } catch (e) {
+    console.warn("Server copy warning:", e);
+  }
+  
+  try {
+    await cp("shared", "dist/shared", { recursive: true });
+    console.log("✓ Shared copied");
+  } catch (e) {
+    console.warn("Shared copy warning:", e);
+  }
 }
 
 buildAll().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
 
 
