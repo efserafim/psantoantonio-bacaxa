@@ -1,10 +1,15 @@
 import { build as viteBuild } from "vite";
 import { mkdir, cp } from "fs/promises";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function buildAll() {
   // Build client
   console.log("building client...");
-  await viteBuild();
+  const projectRoot = path.resolve(__dirname, "..");
+  await viteBuild({ root: projectRoot });
 
   // Copy server and shared to dist
   console.log("copying server files...");
