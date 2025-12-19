@@ -1,24 +1,120 @@
+import { useEffect, useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Newspaper, Users, Clock, ChurchIcon, TrendingUp } from "lucide-react";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { useToast } from "@/hooks/use-toast";
 
-// todo: remove mock functionality
-const stats = [
-  { title: "Notícias", value: "12", icon: Newspaper, description: "Publicadas este mês" },
-  { title: "Pastorais", value: "8", icon: Users, description: "Cadastradas" },
-  { title: "Horários de Missas", value: "24", icon: Clock, description: "Configurados" },
-  { title: "Capelas", value: "4", icon: ChurchIcon, description: "Vinculadas" },
-];
-
-// todo: remove mock functionality
-const recentActivity = [
-  { action: "Notícia publicada", title: "Festa de Santo Antonio 2024", time: "Há 2 horas" },
-  { action: "Pastoral atualizada", title: "Pastoral da Família", time: "Há 5 horas" },
-  { action: "Horário alterado", title: "Missa de Domingo - 19h", time: "Há 1 dia" },
-  { action: "Capela adicionada", title: "Capela São Sebastião", time: "Há 2 dias" },
-];
+interface ActivityItem {
+  action: string;
+  title: string;
+  time: string;
+}
 
 export default function AdminDashboard() {
+  const { isAuthenticated, isLoading } = useAdminAuth();
+  const { toast } = useToast();
+  const [stats, setStats] = useState([
+    { title: "Notícias", value: "0", icon: Newspaper, description: "Publicadas" },
+    { title: "Pastorais", value: "0", icon: Users, description: "Cadastradas" },
+    { title: "Horários de Missas", value: "0", icon: Clock, description: "Configurados" },
+    { title: "Capelas", value: "0", icon: ChurchIcon, description: "Vinculadas" },
+  ]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthenticated || isLoading) return;
+
+    // Buscar dados reais das APIs
+    const loadData = async () => {
+      try {
+        const [noticiasRes, pastoraisRes, missasRes, capelasRes] = await Promise.all([
+          fetch("/api/noticias"),
+          fetch("/api/pastorais"),
+          fetch("/api/missas"),
+          fetch("/api/capelas"),
+        ]);
+
+        const noticias = await noticiasRes.json();
+        const pastorais = await pastoraisRes.json();
+        const missas = await missasRes.json();
+        const capelas = await capelasRes.json();
+
+        // Atualizar stats com dados reais
+        setStats([
+          { title: "Notícias", value: noticias.length.toString(), icon: Newspaper, description: "Publicadas" },
+          { title: "Pastorais", value: pastorais.length.toString(), icon: Users, description: "Cadastradas" },
+          { title: "Horários de Missas", value: missas.length.toString(), icon: Clock, description: "Configurados" },
+          { title: "Capelas", value: capelas.length.toString(), icon: ChurchIcon, description: "Vinculadas" },
+        ]);
+
+        // Montar atividade recente a partir dos dados
+        const activities: ActivityItem[] = [];
+        
+        if (noticias.length > 0) {
+          activities.push({
+            action: "Notícia publicada",
+            title: noticias[0].title,
+            time: "Recentemente",
+          });
+        }
+        
+        if (pastorais.length > 0) {
+          activities.push({
+            action: "Pastoral ativa",
+            title: pastorais[0].name,
+            time: "Cadastrada",
+          });
+        }
+        
+        if (missas.length > 0) {
+          activities.push({
+            action: "Horário de missa",
+            title: `${missas[0].time} - ${missas[0].description}`,
+            time: "Cadastrado",
+          });
+        }
+        
+        if (capelas.length > 0) {
+          activities.push({
+            action: "Capela cadastrada",
+            title: capelas[0].name,
+            time: "Cadastrada",
+          });
+        }
+
+        setRecentActivity(activities.length > 0 ? activities : defaultActivity);
+        setStatsLoading(false);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Tente recarregar a página.",
+          variant: "destructive",
+        });
+        setRecentActivity(defaultActivity);
+        setStatsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [isAuthenticated, isLoading, toast]);
+
+  const defaultActivity: ActivityItem[] = [
+    { action: "Sistema", title: "Bem-vindo à dashboard", time: "Agora" },
+  ];
+
+  if (isLoading || statsLoading) {
+    return (
+      <AdminLayout title="Dashboard">
+        <div className="flex items-center justify-center min-h-screen">
+          <p>Carregando...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout title="Dashboard">
       <div className="space-y-6">

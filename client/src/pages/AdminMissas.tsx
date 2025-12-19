@@ -1,193 +1,322 @@
-import { useState } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Clock, ChurchIcon } from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
-// todo: remove mock functionality
-const mockSchedules = [
-  {
-    id: 1,
-    chapel: "Igreja Matriz Santo Antonio",
-    schedules: [
-      { day: "Domingo", times: ["7h", "9h", "11h", "19h"] },
-      { day: "Segunda a Sexta", times: ["7h", "18h"] },
-      { day: "Sábado", times: ["7h", "17h"] },
-    ],
-  },
-  {
-    id: 2,
-    chapel: "Capela Nossa Senhora Aparecida",
-    schedules: [
-      { day: "Domingo", times: ["8h", "18h"] },
-      { day: "Quarta-feira", times: ["19h"] },
-    ],
-  },
-];
+type Massa = {
+  id: string;
+  capela_id: string;
+  day_of_week: number;
+  time: string;
+  description?: string | null;
+};
 
-// todo: remove mock functionality
-const chapels = [
-  "Igreja Matriz Santo Antonio",
-  "Capela Nossa Senhora Aparecida",
-  "Capela São José",
-  "Capela Santa Luzia",
+type Capela = {
+  id: string;
+  name: string;
+};
+
+const DAYS = [
+  "Domingo",
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado",
 ];
 
 export default function AdminMissas() {
+  const [missas, setMissas] = useState<Massa[]>([]);
+  const [capelas, setCapelas] = useState<Capela[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const [formData, setFormData] = useState({
-    chapel: "",
-    day: "",
-    time: "",
+    capela_id: "",
+    day_of_week: "0",
+    time: "09:00",
+    description: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [missasRes, capelasRes] = await Promise.all([
+        fetch("/api/missas"),
+        fetch("/api/capelas"),
+      ]);
+
+      const missasData = await missasRes.json();
+      const capelasData = await capelasRes.json();
+
+      setMissas(Array.isArray(missasData) ? missasData : []);
+      setCapelas(Array.isArray(capelasData) ? capelasData : []);
+    } catch (err) {
+      console.error("Erro ao carregar dados:", err);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting mass schedule:", formData);
-    toast({
-      title: "Horário salvo!",
-      description: "O horário de missa foi salvo com sucesso.",
+    if (!formData.capela_id) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma capela",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const url = editingId ? `/api/missas/${editingId}` : "/api/missas";
+      const method = editingId ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          day_of_week: parseInt(formData.day_of_week),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Erro ao salvar missa");
+
+      toast({
+        title: "Sucesso",
+        description: editingId ? "Missa atualizada" : "Missa criada",
+      });
+
+      setFormData({
+        capela_id: "",
+        day_of_week: "0",
+        time: "09:00",
+        description: "",
+      });
+      setEditingId(null);
+      setFormOpen(false);
+      loadData();
+    } catch (err) {
+      console.error("Erro:", err);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a missa",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (missa: Massa) => {
+    setFormData({
+      capela_id: missa.capela_id || "",
+      day_of_week: missa.day_of_week.toString(),
+      time: missa.time,
+      description: missa.description || "",
     });
-    setIsDialogOpen(false);
-    setFormData({ chapel: "", day: "", time: "" });
+    setEditingId(missa.id);
+    setFormOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja deletar esta missa?")) return;
+
+    try {
+      const res = await fetch(`/api/missas/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Erro ao deletar");
+
+      toast({
+        title: "Sucesso",
+        description: "Missa deletada com sucesso",
+      });
+      loadData();
+    } catch (err) {
+      console.error("Erro:", err);
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar a missa",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getCapelName = (capaId: string) => {
+    return capelas.find((c) => c.id === capaId)?.name || "Desconhecida";
   };
 
   return (
-    <AdminLayout title="Horários de Missas">
+    <AdminLayout>
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2" data-testid="button-add-mass">
-                <Plus className="h-4 w-4" />
-                Adicionar Horário
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="font-serif">Novo Horário de Missa</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="chapel">Capela / Igreja</Label>
-                  <Select
-                    value={formData.chapel}
-                    onValueChange={(value) => setFormData({ ...formData, chapel: value })}
-                  >
-                    <SelectTrigger data-testid="select-mass-chapel">
-                      <SelectValue placeholder="Selecione a capela" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {chapels.map((chapel) => (
-                        <SelectItem key={chapel} value={chapel}>
-                          {chapel}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="day">Dia da Semana</Label>
-                  <Select
-                    value={formData.day}
-                    onValueChange={(value) => setFormData({ ...formData, day: value })}
-                  >
-                    <SelectTrigger data-testid="select-mass-day">
-                      <SelectValue placeholder="Selecione o dia" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Domingo">Domingo</SelectItem>
-                      <SelectItem value="Segunda-feira">Segunda-feira</SelectItem>
-                      <SelectItem value="Terça-feira">Terça-feira</SelectItem>
-                      <SelectItem value="Quarta-feira">Quarta-feira</SelectItem>
-                      <SelectItem value="Quinta-feira">Quinta-feira</SelectItem>
-                      <SelectItem value="Sexta-feira">Sexta-feira</SelectItem>
-                      <SelectItem value="Sábado">Sábado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="time">Horário</Label>
-                  <Input
-                    id="time"
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    data-testid="input-mass-time"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" data-testid="button-save-mass">
-                    Salvar Horário
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+        <div>
+          <h1 className="text-3xl font-bold">Gerenciar Horários de Missa</h1>
+          <p className="text-muted-foreground mt-2">
+            Adicione, edite ou remova horários de missa
+          </p>
         </div>
 
-        <div className="space-y-6">
-          {mockSchedules.map((schedule) => (
-            <Card key={schedule.id} data-testid={`card-schedule-${schedule.id}`}>
-              <CardHeader className="bg-primary/5 border-b border-border">
-                <CardTitle className="flex items-center gap-3 text-lg">
-                  <ChurchIcon className="h-5 w-5 text-primary" />
-                  {schedule.chapel}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-border">
-                  {schedule.schedules.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between gap-4 px-6 py-4">
-                      <span className="font-medium">{item.day}</span>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {item.times.map((time, timeIndex) => (
-                          <Badge key={timeIndex} variant="secondary" className="gap-1">
-                            <Clock className="h-3 w-3" />
-                            {time}
-                          </Badge>
-                        ))}
-                        <div className="flex gap-1 ml-2">
-                          <Button variant="ghost" size="icon" data-testid={`button-edit-time-${index}`}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="text-destructive" data-testid={`button-delete-time-${index}`}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+        <Dialog open={formOpen} onOpenChange={setFormOpen}>
+          <DialogTrigger asChild>
+            <Button>+ Nova Missa</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingId ? "Editar Missa" : "Adicionar Nova Missa"}</DialogTitle>
+              <DialogDescription>
+                {editingId ? "Atualize os detalhes da missa" : "Preencha os detalhes do novo horário de missa"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="capela">Capela *</Label>
+                <select
+                  id="capela"
+                  className="w-full border border-input rounded-md px-3 py-2 text-sm"
+                  value={formData.capela_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, capela_id: e.target.value })
+                  }
+                >
+                  <option value="">Selecione uma capela</option>
+                  {capelas.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="day">Dia da Semana *</Label>
+                <select
+                  id="day"
+                  className="w-full border border-input rounded-md px-3 py-2 text-sm"
+                  value={formData.day_of_week}
+                  onChange={(e) =>
+                    setFormData({ ...formData, day_of_week: e.target.value })
+                  }
+                >
+                  {DAYS.map((day, idx) => (
+                    <option key={idx} value={idx.toString()}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="time">Horário *</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, time: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">Descrição</Label>
+                <Input
+                  id="description"
+                  placeholder="Ex: Missa de Dom Fulano"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                />
+              </div>
+
+              <Button type="submit" className="w-full">
+                {editingId ? "Atualizar Missa" : "Criar Missa"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {loading ? (
+          <p className="text-center text-muted-foreground">Carregando...</p>
+        ) : (
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Capela</TableHead>
+                  <TableHead>Dia</TableHead>
+                  <TableHead>Horário</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {missas.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      Nenhuma missa cadastrada
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  missas.map((missa) => (
+                    <TableRow key={missa.id}>
+                      <TableCell>{getCapelName(missa.capela_id)}</TableCell>
+                      <TableCell>{DAYS[missa.day_of_week] || "?"}</TableCell>
+                      <TableCell>{missa.time}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {missa.description || "-"}
+                      </TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(missa)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(missa.id)}
+                        >
+                          Deletar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

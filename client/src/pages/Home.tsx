@@ -1,36 +1,41 @@
 import PageLayout from "@/components/PageLayout";
 import HeroSection from "@/components/HeroSection";
 import NewsCard from "@/components/NewsCard";
+import { useEffect, useState } from "react";
 import PastoralCard from "@/components/PastoralCard";
 import MassSchedule from "@/components/MassSchedule";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ArrowRight, ChurchIcon } from "lucide-react";
 
-// todo: remove mock functionality
-const mockNews = [
-  {
-    id: 1,
-    title: "Festa de Santo Antonio 2024 - Participe das Celebrações",
-    excerpt: "A tradicional festa do nosso padroeiro acontecerá de 1º a 13 de junho com missas especiais, quermesse e procissão.",
-    imageUrl: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=600&h=400&fit=crop",
-    publishedAt: new Date("2024-05-15"),
-  },
-  {
-    id: 2,
-    title: "Campanha do Agasalho - Doe Roupas e Cobertores",
-    excerpt: "Nossa paróquia está arrecadando agasalhos para famílias carentes. Traga sua doação na secretaria paroquial.",
-    imageUrl: "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&h=400&fit=crop",
-    publishedAt: new Date("2024-05-10"),
-  },
-  {
-    id: 3,
-    title: "Catequese 2024 - Inscrições Abertas",
-    excerpt: "Estão abertas as inscrições para catequese de crianças, jovens e adultos. Venha preparar-se para os sacramentos.",
-    imageUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&h=400&fit=crop",
-    publishedAt: new Date("2024-05-05"),
-  },
-];
+// fetch news from API
+type ApiNews = {
+  id: string;
+  title: string;
+  excerpt?: string | null;
+  image_url?: string | null;
+  published_at?: string | null;
+};
+
+const useLatestNews = (limit = 3) => {
+  const [news, setNews] = useState<ApiNews[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch(`/api/noticias`)
+      .then((r) => r.json())
+      .then((data: ApiNews[]) => {
+        if (!mounted) return;
+        setNews(data.slice(0, limit));
+      })
+      .catch(() => setNews([]));
+    return () => {
+      mounted = false;
+    };
+  }, [limit]);
+
+  return news;
+};
 
 // todo: remove mock functionality
 const mockPastorals = [
@@ -84,8 +89,15 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockNews.map((news) => (
-              <NewsCard key={news.id} {...news} />
+            {useLatestNews().map((n) => (
+              <NewsCard
+                key={n.id}
+                id={n.id}
+                title={n.title}
+                excerpt={n.excerpt || ""}
+                imageUrl={n.image_url || undefined}
+                publishedAt={n.published_at || new Date().toISOString()}
+              />
             ))}
           </div>
         </div>

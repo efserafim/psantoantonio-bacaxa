@@ -21,9 +21,16 @@ export default function AdminLogin() {
     e.preventDefault();
     setIsLoading(true);
 
-    // todo: replace with actual login API call
-    setTimeout(() => {
-      if (formData.username && formData.password) {
+    try {
+      // Credenciais simples para demo (em produção use OAuth)
+      const validUsername = "admin";
+      const validPassword = "admin";
+
+      if (formData.username === validUsername && formData.password === validPassword) {
+        // Armazenar token no localStorage
+        localStorage.setItem("adminToken", "true");
+        localStorage.setItem("adminUser", formData.username);
+        
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo ao painel administrativo.",
@@ -32,12 +39,19 @@ export default function AdminLogin() {
       } else {
         toast({
           title: "Erro no login",
-          description: "Por favor, preencha todos os campos.",
+          description: "Usuário ou senha incorretos.",
           variant: "destructive",
         });
       }
+    } catch (error) {
+      toast({
+        title: "Erro ao fazer login",
+        description: "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

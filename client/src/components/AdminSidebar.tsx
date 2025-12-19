@@ -21,9 +21,10 @@ import {
   LogOut,
   Home,
 } from "lucide-react";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 const menuItems = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Notícias", href: "/admin/noticias", icon: Newspaper },
   { title: "Pastorais", href: "/admin/pastorais", icon: Users },
   { title: "Horários de Missas", href: "/admin/missas", icon: Clock },
@@ -32,6 +33,7 @@ const menuItems = [
 
 export default function AdminSidebar() {
   const [location] = useLocation();
+  const { logout } = useAdminAuth();
 
   return (
     <Sidebar>
@@ -78,7 +80,13 @@ export default function AdminSidebar() {
               Ver Site
             </Button>
           </Link>
-          <Button variant="ghost" className="w-full justify-start gap-2 text-destructive" size="sm" data-testid="button-admin-logout">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2 text-destructive" 
+            size="sm" 
+            data-testid="button-admin-logout"
+            onClick={logout}
+          >
             <LogOut className="h-4 w-4" />
             Sair
           </Button>
