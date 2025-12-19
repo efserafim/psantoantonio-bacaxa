@@ -20,10 +20,21 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // List what's in dist/public
+  try {
+    const files = fs.readdirSync(distPath);
+    console.log("📁 Contents of dist/public:", files);
+    console.log("📁 index.html exists?", fs.existsSync(path.resolve(distPath, "index.html")));
+  } catch (e) {
+    console.error("❌ Error reading dist/public:", e);
+  }
+
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    const indexPath = path.resolve(distPath, "index.html");
+    console.log("📄 Sending index.html from:", indexPath);
+    res.sendFile(indexPath);
   });
 }
