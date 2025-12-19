@@ -78,6 +78,11 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (process.env.NODE_ENV === "production") {
+    // Debug middleware to track requests
+    app.use((req, res, next) => {
+      console.log(`🔍 Request: ${req.method} ${req.path}`);
+      next();
+    });
     serveStatic(app);
   } else {
     const { setupVite } = await import("./vite");
