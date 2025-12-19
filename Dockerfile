@@ -5,8 +5,8 @@ WORKDIR /app
 # Copiar package files
 COPY package*.json ./
 
-# Instalar dependencies
-RUN npm ci --omit=dev
+# Instalar ALL dependencies (inclui dev)
+RUN npm ci
 
 # Copiar código
 COPY . .
@@ -14,9 +14,11 @@ COPY . .
 # Build
 RUN npm run build
 
-# Remover dev dependencies and source files desnecessários
-RUN rm -rf node_modules client server script shared *.ts *.js *.json 2>/dev/null || true
-RUN npm ci --omit=dev --production
+# Remover pasta desnecessária
+RUN rm -rf client server script shared src .local .env
+
+# Instalar apenas dependencies de produção
+RUN npm prune --omit=dev
 
 # Iniciar
 EXPOSE 5000
