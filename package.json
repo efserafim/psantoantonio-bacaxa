@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx server/index.ts",
-    "build": "npm run build:client && npm run build:server",
+    "build": "vite build && tsx script/build-server.ts",
     "build:client": "vite build",
     "build:server": "tsx script/build-server.ts",
     "start": "tsx dist/server/index.ts",
