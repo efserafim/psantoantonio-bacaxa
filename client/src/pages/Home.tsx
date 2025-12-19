@@ -154,8 +154,7 @@ export default function Home() {
             Venha nos Visitar
           </h2>
           <p className="text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-            Nossa comunidade está de portas abertas para receber você. Participe das missas, 
-            conheça nossas pastorais e faça parte desta família de fé.
+            Santo Antonio, apóstolo do amor, fazei que me inflameis do ardor divino que vos animava.
           </p>
           <Link href="/missas">
             <Button size="lg" className="bg-white text-primary hover:bg-white/90" data-testid="button-cta-missas">
