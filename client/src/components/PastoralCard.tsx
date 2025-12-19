@@ -5,13 +5,14 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface PastoralCardProps {
-  id: number;
+  id: string | number;
   name: string;
   description: string;
   imageUrl?: string;
   meetingDay?: string;
   meetingTime?: string;
   location?: string;
+  coordinator?: string;
 }
 
 export default function PastoralCard({
@@ -22,6 +23,7 @@ export default function PastoralCard({
   meetingDay,
   meetingTime,
   location,
+  coordinator,
 }: PastoralCardProps) {
   return (
     <Card className="overflow-hidden hover-elevate" data-testid={`card-pastoral-${id}`}>

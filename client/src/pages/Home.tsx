@@ -3,7 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import NewsCard from "@/components/NewsCard";
 import { useEffect, useState } from "react";
 import PastoralCard from "@/components/PastoralCard";
-import MassSchedule from "@/components/MassSchedule";
+import MassScheduleDynamic from "@/components/MassScheduleDynamic";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ArrowRight, ChurchIcon } from "lucide-react";
@@ -37,35 +37,37 @@ const useLatestNews = (limit = 3) => {
   return news;
 };
 
-// todo: remove mock functionality
-const mockPastorals = [
-  {
-    id: 1,
-    name: "Pastoral da Família",
-    description: "Acolhimento e acompanhamento de famílias em diferentes etapas da vida matrimonial e familiar.",
-    meetingDay: "Terças-feiras",
-    meetingTime: "19h30",
-    location: "Salão Paroquial",
-  },
-  {
-    id: 2,
-    name: "Pastoral da Juventude",
-    description: "Espaço de encontro, formação e vivência da fé para jovens de 15 a 30 anos.",
-    meetingDay: "Sábados",
-    meetingTime: "15h",
-    location: "Centro Comunitário",
-  },
-];
+type Pastoral = {
+  id: string;
+  name: string;
+  description?: string | null;
+  coordinator?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  meeting_day?: string | null;
+  meeting_time?: string | null;
+  image_url?: string | null;
+  status: string;
+};
 
-// todo: remove mock functionality
-const mockMassSchedule = {
-  chapel: "Igreja Matriz Santo Antonio",
-  address: "Rua da Igreja, 123 - Centro",
-  schedule: [
-    { day: "Domingo", times: ["7h", "9h", "11h", "19h"] },
-    { day: "Segunda a Sexta", times: ["7h", "18h"] },
-    { day: "Sábado", times: ["7h", "17h"] },
-  ],
+const useLatestPastorals = (limit = 2) => {
+  const [pastorals, setPastorals] = useState<Pastoral[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch(`/api/pastorais`)
+      .then((r) => r.json())
+      .then((data: Pastoral[]) => {
+        if (!mounted) return;
+        setPastorals(Array.isArray(data) ? data.slice(0, limit) : []);
+      })
+      .catch(() => setPastorals([]));
+    return () => {
+      mounted = false;
+    };
+  }, [limit]);
+
+  return pastorals;
 };
 
 export default function Home() {
@@ -119,7 +121,7 @@ export default function Home() {
           </div>
 
           <div className="max-w-2xl">
-            <MassSchedule {...mockMassSchedule} />
+            <MassScheduleDynamic />
           </div>
         </div>
       </section>
@@ -140,8 +142,17 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {mockPastorals.map((pastoral) => (
-              <PastoralCard key={pastoral.id} {...pastoral} />
+            {useLatestPastorals().map((pastoral) => (
+              <PastoralCard
+                key={pastoral.id}
+                id={pastoral.id}
+                name={pastoral.name}
+                description={pastoral.description || ""}
+                coordinator={pastoral.coordinator || undefined}
+                meetingDay={pastoral.meeting_day || undefined}
+                meetingTime={pastoral.meeting_time || undefined}
+                imageUrl={pastoral.image_url || undefined}
+              />
             ))}
           </div>
         </div>
