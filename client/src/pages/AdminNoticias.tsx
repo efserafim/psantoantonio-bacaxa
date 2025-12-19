@@ -94,8 +94,8 @@ export default function AdminNoticias() {
       
       await res.json();
       toast({ title: "Sucesso!", description: "Notícia publicada com sucesso." });
-      setIsDialogOpen(false);
       setFormData({ title: "", excerpt: "", content: "", images: [], publishedAt: new Date().toISOString().split('T')[0] });
+      setIsDialogOpen(false);
       await fetchNews();
     } catch (error) {
       console.error(error);
@@ -149,11 +149,11 @@ export default function AdminNoticias() {
                 Nova Notícia
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <DialogTitle className="font-serif">Nova Notícia</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Título</Label>
                   <Input
@@ -207,7 +207,7 @@ export default function AdminNoticias() {
                   />
                 </div>
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 mt-4">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancelar
                   </Button>
