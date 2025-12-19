@@ -16,4 +16,5 @@ RUN npm run build
 
 # Iniciar
 EXPOSE 5000
+ENV NODE_ENV=production
 CMD ["npm", "start"]
