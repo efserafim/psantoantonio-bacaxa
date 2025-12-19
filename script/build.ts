@@ -1,36 +1,7 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
-
-// server deps to bundle to reduce openat(2) syscalls
-// which helps cold start times
-const allowlist = [
-  "@google/generative-ai",
-  "axios",
-  "connect-pg-simple",
-  "cors",
-  "date-fns",
-  "drizzle-orm",
-  "drizzle-zod",
-  "express",
-  "express-rate-limit",
-  "express-session",
-  "jsonwebtoken",
-  "memorystore",
-  "multer",
-  "nanoid",
-  "nodemailer",
-  "openai",
-  "passport",
-  "passport-local",
-  "pg",
-  "stripe",
-  "uuid",
-  "ws",
-  "xlsx",
-  "zod",
-  "zod-validation-error",
-];
+import { rm, readFile, copyFile } from "fs/promises";
+import path from "path";
 
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
@@ -44,6 +15,15 @@ async function buildAll() {
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.devDependencies || {}),
   ];
+
+  // Only bundle critical dependencies
+  const allowlist = [
+    "express",
+    "cors",
+    "multer",
+    "date-fns",
+    "drizzle-orm",
+  ];
   const externals = allDeps.filter((dep) => !allowlist.includes(dep));
 
   await esbuild({
@@ -55,9 +35,10 @@ async function buildAll() {
     define: {
       "process.env.NODE_ENV": '"production"',
     },
-    minify: true,
+    minify: false,
     external: externals,
     logLevel: "info",
+    timeout: 600000, // 10 minutes timeout
   });
 }
 
