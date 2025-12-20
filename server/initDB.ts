@@ -2,8 +2,9 @@ import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
 import { db } from "./db";
-import { news, massas, pastorais, capelas } from "@shared/schema";
+import { news, massas, pastorais, capelas, admins } from "@shared/schema";
 import { sql } from "drizzle-orm";
+import { seedAdmins } from "../script/seed-admins";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,6 +67,17 @@ export async function initializeDatabase() {
         image_url TEXT,
         status TEXT DEFAULT 'active',
         created_at INTEGER DEFAULT (strftime('%s', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS admins (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        name TEXT,
+        status TEXT DEFAULT 'active',
+        last_login INTEGER,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
       );
     `);
 
@@ -214,6 +226,9 @@ export async function initializeDatabase() {
 
     sqlite.close();
     console.log("✓ Database initialized with all tables and sample data");
+
+    // Seed admins
+    await seedAdmins();
   } catch (error) {
     console.error("Error initializing database:", error);
     throw error;

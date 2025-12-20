@@ -22,6 +22,28 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Admin table
+export const admins = sqliteTable("admins", {
+  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),
+  email: text("email").notNull().unique(),
+  password_hash: text("password_hash").notNull(),
+  name: text("name"),
+  status: text("status").default("active"), // active, inactive
+  last_login: integer("last_login"),
+  created_at: integer("created_at").default(sql`(strftime('%s', 'now'))`),
+  updated_at: integer("updated_at").default(sql`(strftime('%s', 'now'))`),
+});
+
+export const insertAdminSchema = createInsertSchema(admins).pick({
+  email: true,
+  password_hash: true,
+  name: true,
+  status: true,
+});
+
+export type InsertAdmin = z.infer<typeof insertAdminSchema>;
+export type Admin = typeof admins.$inferSelect;
+
 // News table
 export const news = sqliteTable("news", {
   id: text("id").primaryKey().default(sql`(lower(hex(randomblob(16))))`),

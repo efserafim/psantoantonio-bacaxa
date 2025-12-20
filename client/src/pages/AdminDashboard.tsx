@@ -12,7 +12,7 @@ interface ActivityItem {
 }
 
 export default function AdminDashboard() {
-  const { isAuthenticated, isLoading } = useAdminAuth();
+  const { isAuthenticated, isLoading, admin } = useAdminAuth();
   const { toast } = useToast();
   const [stats, setStats] = useState([
     { title: "Notícias", value: "0", icon: Newspaper, description: "Publicadas" },
@@ -109,7 +109,10 @@ export default function AdminDashboard() {
     return (
       <AdminLayout title="Dashboard">
         <div className="flex items-center justify-center min-h-screen">
-          <p>Carregando...</p>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando dashboard...</p>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -118,6 +121,17 @@ export default function AdminDashboard() {
   return (
     <AdminLayout title="Dashboard">
       <div className="space-y-6">
+        {/* Boas-vindas do Admin */}
+        {admin && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+            <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-1">
+              Bem-vindo, {admin.name || admin.email}! 👋
+            </h2>
+            <p className="text-blue-700 dark:text-blue-300">
+              Você está autenticado e tem acesso total ao painel administrativo.
+            </p>
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, index) => (
             <Card key={index} data-testid={`card-stat-${stat.title.toLowerCase()}`}>

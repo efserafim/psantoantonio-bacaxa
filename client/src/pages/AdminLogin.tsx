@@ -4,32 +4,59 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChurchIcon, Eye, EyeOff, LogIn } from "lucide-react";
+import { ChurchIcon, Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SecureStorage } from "@/lib/secure-storage";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isBlocked) {
+      toast({
+        title: "Acesso bloqueado",
+        description: "Muitas tentativas. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Credenciais simples para demo (em produção use OAuth)
-      const validUsername = "admin";
-      const validPassword = "admin";
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-      if (formData.username === validUsername && formData.password === validPassword) {
-        // Armazenar token no localStorage
-        localStorage.setItem("adminToken", "true");
-        localStorage.setItem("adminUser", formData.username);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Armazenar token JWT de forma segura usando sessionStorage
+        SecureStorage.setToken(data.token);
+        SecureStorage.setUser(data.admin);
+        
+        // Resetar tentativas
+        setAttempts(0);
+        setIsBlocked(false);
         
         toast({
           title: "Login realizado com sucesso!",
@@ -37,13 +64,40 @@ export default function AdminLogin() {
         });
         setLocation("/admin/dashboard");
       } else {
-        toast({
-          title: "Erro no login",
-          description: "Usuário ou senha incorretos.",
-          variant: "destructive",
-        });
+        const errorData = await response.json();
+        
+        if (response.status === 429) {
+          // Rate limited
+          setAttempts(5);
+          setIsBlocked(true);
+          toast({
+            title: "Acesso bloqueado",
+            description: errorData.message || "Muitas tentativas. Tente novamente mais tarde.",
+            variant: "destructive",
+          });
+        } else {
+          // Erro de autenticação
+          const newAttempts = attempts + 1;
+          setAttempts(newAttempts);
+          
+          if (newAttempts >= 5) {
+            setIsBlocked(true);
+            toast({
+              title: "Acesso bloqueado",
+              description: "Muitas tentativas incorretas. Tente novamente mais tarde.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Erro no login",
+              description: errorData.message || "Email ou senha incorretos.",
+              variant: "destructive",
+            });
+          }
+        }
       }
     } catch (error) {
+      console.error("Erro ao fazer login:", error);
       toast({
         title: "Erro ao fazer login",
         description: "Tente novamente.",
@@ -67,16 +121,26 @@ export default function AdminLogin() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {isBlocked && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Acesso bloqueado por múltiplas tentativas. Tente novamente mais tarde.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Usuário</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="Digite seu usuário"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                data-testid="input-login-username"
+                id="email"
+                type="email"
+                placeholder="Digite seu email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled={isBlocked}
+                data-testid="input-login-email"
               />
             </div>
             <div className="space-y-2">
@@ -88,6 +152,7 @@ export default function AdminLogin() {
                   placeholder="Digite sua senha"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  disabled={isBlocked}
                   data-testid="input-login-password"
                 />
                 <Button
@@ -96,6 +161,7 @@ export default function AdminLogin() {
                   size="icon"
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isBlocked}
                   data-testid="button-toggle-password"
                 >
                   {showPassword ? (
@@ -106,10 +172,17 @@ export default function AdminLogin() {
                 </Button>
               </div>
             </div>
+            
+            {attempts > 0 && attempts < 5 && (
+              <p className="text-sm text-muted-foreground text-center">
+                Tentativas restantes: {5 - attempts}
+              </p>
+            )}
+            
             <Button
               type="submit"
               className="w-full gap-2"
-              disabled={isLoading}
+              disabled={isLoading || isBlocked}
               data-testid="button-login-submit"
             >
               {isLoading ? (

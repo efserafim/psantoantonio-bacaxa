@@ -7,11 +7,15 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import express from "express";
+import { setupAuthRoutes } from "./routes/auth";
+import { authMiddleware } from "./middleware/auth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Setup authentication routes
+  setupAuthRoutes(app);
   // Ensure uploads directory exists and serve it
   const uploadsDir = path.resolve(import.meta.dirname, "..", "uploads");
   if (!fs.existsSync(uploadsDir)) {
@@ -66,6 +70,7 @@ export async function registerRoutes(
   // Create news (accept multipart/form-data with optional image)
   app.post(
     "/api/noticias",
+    authMiddleware,
     upload.single("image"),
     async (req: any, res: any) => {
       try {
@@ -97,7 +102,7 @@ export async function registerRoutes(
   );
 
   // Update news
-  app.put("/api/noticias/:id", async (req, res) => {
+  app.put("/api/noticias/:id", authMiddleware, async (req, res) => {
     try {
       const payload = req.body;
       await db
@@ -122,7 +127,7 @@ export async function registerRoutes(
   });
 
   // Delete news
-  app.delete("/api/noticias/:id", async (req, res) => {
+  app.delete("/api/noticias/:id", authMiddleware, async (req, res) => {
     try {
       await db.delete(news).where(eq(news.id, req.params.id));
       res.status(204).end();
@@ -142,7 +147,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/missas", async (req: any, res: any) => {
+  app.post("/api/missas", authMiddleware, async (req: any, res: any) => {
     try {
       const payload = req.body || {};
       const values = {
@@ -160,7 +165,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put("/api/missas/:id", async (req, res) => {
+  app.put("/api/missas/:id", authMiddleware, async (req, res) => {
     try {
       const payload = req.body || {};
       const values = {
@@ -178,7 +183,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/missas/:id", async (req, res) => {
+  app.delete("/api/missas/:id", authMiddleware, async (req, res) => {
     try {
       await db.delete(massas).where(eq(massas.id, req.params.id));
       res.status(204).end();
@@ -212,7 +217,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/pastorais", upload.single("image"), async (req: any, res: any) => {
+  app.post("/api/pastorais", authMiddleware, upload.single("image"), async (req: any, res: any) => {
     try {
       const payload = req.body || {};
       const file = req.file;
@@ -238,7 +243,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put("/api/pastorais/:id", upload.single("image"), async (req: any, res: any) => {
+  app.put("/api/pastorais/:id", authMiddleware, upload.single("image"), async (req: any, res: any) => {
     try {
       const payload = req.body || {};
       const file = req.file;
@@ -264,7 +269,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/pastorais/:id", async (req, res) => {
+  app.delete("/api/pastorais/:id", authMiddleware, async (req, res) => {
     try {
       await db.delete(pastorais).where(eq(pastorais.id, req.params.id));
       res.status(204).end();
@@ -298,7 +303,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/capelas", upload.single("image"), async (req: any, res: any) => {
+  app.post("/api/capelas", authMiddleware, upload.single("image"), async (req: any, res: any) => {
     try {
       const payload = req.body || {};
       const file = req.file;
@@ -322,7 +327,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put("/api/capelas/:id", upload.single("image"), async (req: any, res: any) => {
+  app.put("/api/capelas/:id", authMiddleware, upload.single("image"), async (req: any, res: any) => {
     try {
       const payload = req.body || {};
       const file = req.file;
@@ -346,7 +351,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/capelas/:id", async (req, res) => {
+  app.delete("/api/capelas/:id", authMiddleware, async (req, res) => {
     try {
       await db.delete(capelas).where(eq(capelas.id, req.params.id));
       res.status(204).end();

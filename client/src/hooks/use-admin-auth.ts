@@ -1,29 +1,48 @@
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { SecureStorage } from "@/lib/secure-storage";
+
+interface AdminUser {
+  id: string;
+  email: string;
+  name?: string;
+}
 
 export function useAdminAuth() {
   const [, setLocation] = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    if (token) {
+    // Verificar se há token JWT armazenado
+    const token = SecureStorage.getToken();
+
+    if (token && SecureStorage.isTokenValid(token)) {
+      const adminData = SecureStorage.getUser();
+      if (adminData) {
+        setAdmin(adminData);
+      }
       setIsAuthenticated(true);
     } else {
+      // Token inválido ou expirado, limpar
+      SecureStorage.clearAll();
       setIsAuthenticated(false);
-      // Redirecionar para login se não autenticado
       setLocation("/admin");
     }
     setIsLoading(false);
   }, [setLocation]);
 
   const logout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
+    SecureStorage.clearAll();
     setIsAuthenticated(false);
+    setAdmin(null);
     setLocation("/admin");
   };
 
-  return { isAuthenticated, isLoading, logout };
+  const getAuthToken = (): string | null => {
+    return SecureStorage.getToken();
+  };
+
+  return { isAuthenticated, isLoading, logout, admin, getAuthToken };
 }
