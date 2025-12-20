@@ -4,10 +4,40 @@ import { fileURLToPath } from "url";
 import { db } from "./db";
 import { news, massas, pastorais, capelas, admins } from "@shared/schema";
 import { sql } from "drizzle-orm";
-import { seedAdmins } from "../script/seed-admins";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+async function seedAdmins() {
+  try {
+    // Verificar se já existe um admin
+    const existingAdmins = await db.select().from(admins);
+
+    if (existingAdmins.length > 0) {
+      console.log("✅ Admins já existem no banco de dados");
+      return;
+    }
+
+    console.log("🌱 Criando admin padrão...");
+
+    // Importar dinamicamente o serviço de auth
+    const { createAdmin } = await import("./services/admin-auth");
+
+    // Criar admin padrão
+    // IMPORTANTE: Alterar a senha em produção!
+    await createAdmin(
+      "admin@paroquia.com",
+      "senha123456",
+      "Administrador Padrão"
+    );
+
+    console.log("✅ Admin padrão criado com sucesso");
+    console.log("📧 Email: admin@paroquia.com");
+    console.log("🔑 IMPORTANTE: Altere a senha imediatamente em produção!");
+  } catch (error) {
+    console.error("❌ Erro ao criar admin:", error);
+  }
+}
 
 export async function initializeDatabase() {
   try {
